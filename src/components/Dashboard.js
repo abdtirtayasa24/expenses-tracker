@@ -158,7 +158,7 @@ const Dashboard = ({
 
         <div className={`rounded-lg p-6 shadow ${balance >= 0 ? 'bg-green-100 dark:bg-green-900' : 'bg-yellow-100 dark:bg-yellow-900'}`}>
           <h3 className={`text-lg font-semibold ${balance >= 0 ? 'text-green-800 dark:text-green-200' : 'text-yellow-800 dark:text-yellow-200'}`}>Balance</h3>
-          <p className={`text-3xl font-bold ${balance >= 0 ? 'text-green-600 dark:text-green-300' : 'text-yellow-600 dark:text-yellow-300'}`}>Rp{balance.toFixed(0)}</p>
+          <p className={`text-3xl font-bold ${balance >= 0 ? 'text-green-600 dark:text-green-300' : 'text-yellow-600 dark:text-yellow-300'}`}>Rp{Number(balance).toLocaleString("id-ID")}</p>
         </div>
       </div>
 

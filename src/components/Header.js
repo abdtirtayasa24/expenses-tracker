@@ -1,18 +1,11 @@
 import React from 'react';
 
-const Header = ({ darkMode, toggleDarkMode, activeTab, setActiveTab, user, onLogout }) => {
+const Header = ({ darkMode, toggleDarkMode, activeTab, setActiveTab }) => {
   return (
     <header className="bg-indigo-600 text-white shadow-lg">
       <div className="container mx-auto px-4 py-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center">
-            <h1 className="text-2xl font-bold">Expense Tracker</h1>
-            {user && (
-              <span className="ml-4 text-sm bg-indigo-700 px-3 py-1 rounded-full hidden md:inline">
-                {user.email}
-              </span>
-            )}
-          </div>
+          <h1 className="text-2xl font-bold">Expense Tracker</h1>
           
           <nav className="mt-4 md:mt-0">
             <ul className="flex space-x-1">
@@ -67,15 +60,7 @@ const Header = ({ darkMode, toggleDarkMode, activeTab, setActiveTab, user, onLog
             </ul>
           </nav>
           
-          <div className="mt-4 md:mt-0 flex items-center space-x-3">
-            {user && (
-              <button
-                onClick={onLogout}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
-              >
-                Logout
-              </button>
-            )}
+          <div className="mt-4 md:mt-0">
             <button
               onClick={toggleDarkMode}
               className="px-4 py-2 bg-white text-indigo-600 rounded-lg font-medium hover:bg-gray-100 transition-colors"

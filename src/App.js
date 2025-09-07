@@ -4,21 +4,7 @@ import Dashboard from './components/Dashboard';
 import ExpenseForm from './components/ExpenseForm';
 import IncomeForm from './components/IncomeForm';
 import CategoryManager from './components/CategoryManager';
-import Auth from './components/Auth';
-import { 
-  onAuthStateChanged, 
-  signOut as firebaseSignOut 
-} from './firebase';
-import { 
-  listenForExpenses, 
-  listenForIncomes, 
-  listenForCategories,
-  addExpense,
-  addIncome,
-  deleteExpense,
-  deleteIncome,
-  updateCategories
-} from './utils/firebase';
+import { getData, saveData } from './utils/localStorage';
 
 const defaultCategories = {
   expense: ['Food', 'Transport', 'Entertainment', 'Utilities', 'Other'],
@@ -27,78 +13,25 @@ const defaultCategories = {
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
-  const [expenses, setExpenses] = useState({});
-  const [incomes, setIncomes] = useState({});
+  const [expenses, setExpenses] = useState([]);
+  const [incomes, setIncomes] = useState([]);
   const [categories, setCategories] = useState(defaultCategories);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
 
-  // Handle authentication state
+  // Load data from localStorage on initial render
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-      } else {
-        setUser(null);
-        setExpenses({});
-        setIncomes({});
-        setCategories(defaultCategories);
-      }
-      setAuthLoading(false);
-    });
-
-    return () => unsubscribe();
+    const savedData = getData();
+    if (savedData) {
+      setExpenses(savedData.expenses || []);
+      setIncomes(savedData.incomes || []);
+      setCategories(savedData.categories || defaultCategories);
+    }
   }, []);
 
-  // Load user data when authenticated
+  // Save data to localStorage whenever it changes
   useEffect(() => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    
-    // Listen for expenses
-    const unsubscribeExpenses = listenForExpenses(user.uid, (data) => {
-      setExpenses(data);
-    });
-
-    // Listen for incomes
-    const unsubscribeIncomes = listenForIncomes(user.uid, (data) => {
-      setIncomes(data);
-    });
-
-    // Listen for categories
-    const unsubscribeCategories = listenForCategories(user.uid, (data) => {
-      setCategories(data);
-      setLoading(false);
-    });
-
-    // Cleanup subscriptions
-    return () => {
-      unsubscribeExpenses();
-      unsubscribeIncomes();
-      unsubscribeCategories();
-    };
-  }, [user]);
-
-  const handleLogin = () => {
-    // Login handled by auth state listener
-  };
-
-  const handleLogout = async () => {
-    try {
-      await firebaseSignOut(auth);
-      setExpenses({});
-      setIncomes({});
-      setCategories(defaultCategories);
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
+    saveData({ expenses, incomes, categories });
+  }, [expenses, incomes, categories]);
 
   // Toggle dark mode
   const toggleDarkMode = () => {
@@ -106,119 +39,49 @@ function App() {
   };
 
   // Add expense
-  const handleAddExpense = async (expense) => {
-    if (!user) return;
-    
-    try {
-      await addExpense(user.uid, { ...expense, id: Date.now() });
-    } catch (error) {
-      console.error('Error adding expense:', error);
-    }
+  const addExpense = (expense) => {
+    setExpenses([...expenses, { ...expense, id: Date.now() }]);
   };
 
   // Add income
-  const handleAddIncome = async (income) => {
-    if (!user) return;
-    
-    try {
-      await addIncome(user.uid, { ...income, id: Date.now() });
-    } catch (error) {
-      console.error('Error adding income:', error);
-    }
+  const addIncome = (income) => {
+    setIncomes([...incomes, { ...income, id: Date.now() }]);
   };
 
   // Delete expense
-  const handleDeleteExpense = async (id) => {
-    if (!user) return;
-    
-    try {
-      // Find the expense key in Firebase
-      const expenseKey = Object.keys(expenses).find(key => expenses[key].id === id);
-      if (expenseKey) {
-        await deleteExpense(user.uid, expenseKey);
-      }
-    } catch (error) {
-      console.error('Error deleting expense:', error);
-    }
+  const deleteExpense = (id) => {
+    setExpenses(expenses.filter(expense => expense.id !== id));
   };
 
   // Delete income
-  const handleDeleteIncome = async (id) => {
-    if (!user) return;
-    
-    try {
-      // Find the income key in Firebase
-      const incomeKey = Object.keys(incomes).find(key => incomes[key].id === id);
-      if (incomeKey) {
-        await deleteIncome(user.uid, incomeKey);
-      }
-    } catch (error) {
-      console.error('Error deleting income:', error);
-    }
+  const deleteIncome = (id) => {
+    setIncomes(incomes.filter(income => income.id !== id));
   };
 
   // Add category
-  const handleAddCategory = async (type, category) => {
-    if (!user) return;
-    
+  const addCategory = (type, category) => {
     if (!categories[type].includes(category)) {
-      try {
-        const updatedCategories = {
-          ...categories,
-          [type]: [...categories[type], category]
-        };
-        setCategories(updatedCategories);
-        await updateCategories(user.uid, updatedCategories);
-      } catch (error) {
-        console.error('Error adding category:', error);
-      }
+      setCategories({
+        ...categories,
+        [type]: [...categories[type], category]
+      });
     }
   };
 
   // Delete category
-  const handleDeleteCategory = async (type, category) => {
-    if (!user) return;
+  const deleteCategory = (type, category) => {
+    setCategories({
+      ...categories,
+      [type]: categories[type].filter(cat => cat !== category)
+    });
     
-    try {
-      const updatedCategories = {
-        ...categories,
-        [type]: categories[type].filter(cat => cat !== category)
-      };
-      setCategories(updatedCategories);
-      await updateCategories(user.uid, updatedCategories);
-    } catch (error) {
-      console.error('Error deleting category:', error);
+    // Remove all expenses/incomes with this category
+    if (type === 'expense') {
+      setExpenses(expenses.filter(expense => expense.category !== category));
+    } else {
+      setIncomes(incomes.filter(income => income.category !== category));
     }
   };
-
-  // Show loading screen while checking auth state
-  if (authLoading) {
-    return (
-      <div className={`min-h-screen flex items-center justify-center ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-lg">Initializing app...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show login screen if not authenticated
-  if (!user) {
-    return <Auth onLogin={handleLogin} />;
-  }
-
-  // Show loading screen while loading user data
-  if (loading) {
-    return (
-      <div className={`min-h-screen flex items-center justify-center ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-lg">Loading your financial data...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
@@ -227,15 +90,13 @@ function App() {
         toggleDarkMode={toggleDarkMode} 
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        user={user}
-        onLogout={handleLogout}
       />
       
       <main className="container mx-auto px-4 py-8">
         {activeTab === 'dashboard' && (
           <Dashboard 
-            expenses={Object.values(expenses)} 
-            incomes={Object.values(incomes)} 
+            expenses={expenses} 
+            incomes={incomes} 
             categories={categories}
           />
         )}
@@ -243,26 +104,26 @@ function App() {
         {activeTab === 'expenses' && (
           <ExpenseForm 
             categories={categories.expense} 
-            onAddExpense={handleAddExpense}
-            expenses={Object.values(expenses)}
-            onDeleteExpense={handleDeleteExpense}
+            onAddExpense={addExpense}
+            expenses={expenses}
+            onDeleteExpense={deleteExpense}
           />
         )}
         
         {activeTab === 'income' && (
           <IncomeForm 
             categories={categories.income} 
-            onAddIncome={handleAddIncome}
-            incomes={Object.values(incomes)}
-            onDeleteIncome={handleDeleteIncome}
+            onAddIncome={addIncome}
+            incomes={incomes}
+            onDeleteIncome={deleteIncome}
           />
         )}
         
         {activeTab === 'categories' && (
           <CategoryManager 
             categories={categories} 
-            onAddCategory={handleAddCategory}
-            onDeleteCategory={handleDeleteCategory}
+            onAddCategory={addCategory}
+            onDeleteCategory={deleteCategory}
           />
         )}
       </main>

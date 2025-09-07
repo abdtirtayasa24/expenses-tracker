@@ -1,4 +1,3 @@
-// src/components/IncomeForm.js
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 
@@ -37,7 +36,7 @@ const IncomeForm = ({ categories, onAddIncome, incomes, onDeleteIncome }) => {
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Amount ($)</label>
+            <label className="block text-sm font-medium mb-2">Amount (Rp)</label>
             <input
               type="number"
               step="0.01"

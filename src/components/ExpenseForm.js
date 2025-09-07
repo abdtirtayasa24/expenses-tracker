@@ -1,4 +1,3 @@
-// src/components/ExpenseForm.js
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 
@@ -119,14 +118,12 @@ const ExpenseForm = ({ categories, onAddExpense, expenses, onDeleteExpense }) =>
                   <tr key={expense.id}>
                     <td className="px-6 py-4 whitespace-nowrap">{expense.date}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                         {expense.category}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">{expense.note || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap font-medium text-red-600 dark:text-red-400">
-                      Rp{Number(expense.amount).toLocaleString("id-ID")}
-                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap font-medium">Rp{Number(expense.amount).toLocaleString("id-ID")}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => handleDelete(expense.id)}
